@@ -53,14 +53,28 @@ public class MatchCards {
     ArrayList<JButton> board;
     Timer hideCardTimer;
     boolean gameReady = false;
+    int seconds = 0;
     JButton card1Selected;
     JButton card2Selected;
+    Timer timer; 
     
-    MatchCards() {
+    enum GameMode {
+        COUNT_UP, COUNT_DOWN, FREE
+    }
+
+    GameMode selectedMode = GameMode.COUNT_UP;
+    int countdownSeconds = 5; // default seconds for COUNT_DOWN mode
+
+    
+    void play() {
+        textPanel = new JPanel();
+        boardPanel = new JPanel();
+        restartGamePanel = new JPanel();
+
+        showGameModeDialog();
         setupCards();
         shuffleCards();
 
-        // frame.setVisible(true);
         frame.setLayout(new BorderLayout());
         frame.setSize(boardWidth, boardHeight);
         frame.setLocationRelativeTo(null);
@@ -69,14 +83,58 @@ public class MatchCards {
 
         //error text
         textLabel.setFont(new Font("Arial", Font.PLAIN, 20));
-        textLabel.setHorizontalAlignment(JLabel.CENTER);
+        textLabel.setHorizontalAlignment(JLabel.LEFT);
         textLabel.setText("Errors: " + Integer.toString(errorCount));
+        textLabel.setBorder(BorderFactory.createEmptyBorder(0, 16, 0, 0)); // left margin
 
+        textPanel.setLayout(new BorderLayout());
         textPanel.setPreferredSize(new Dimension(boardWidth, 30));
-        textPanel.add(textLabel);
+        textPanel.add(textLabel, BorderLayout.WEST);
         frame.add(textPanel, BorderLayout.NORTH);
 
-        //card game board
+        ///timer text
+        JLabel timerLabel = new JLabel();
+        timerLabel.setFont(new Font("Arial", Font.PLAIN, 20));
+        timerLabel.setHorizontalAlignment(JLabel.RIGHT);
+        timerLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 16)); // right margin
+        textPanel.add(timerLabel, BorderLayout.EAST);
+
+        if (selectedMode == GameMode.COUNT_DOWN) {
+            seconds = countdownSeconds;
+            timerLabel.setText("Time: " + seconds);
+            timer = new Timer(1000, new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    seconds--;
+                    timerLabel.setText("Time: " + seconds);
+                    if (seconds <= 0) {
+                        ((Timer)e.getSource()).stop();
+                        JOptionPane.showMessageDialog(frame, "You Lose!!", "Game Over", JOptionPane.INFORMATION_MESSAGE);
+                        gameReady = false;
+                        restartButton.setEnabled(true);
+                        // Reset frame & back to play()
+                        restoplay();
+                    }
+                }
+            });
+            timer.start();
+        } else if (selectedMode == GameMode.COUNT_UP) {
+            seconds = 0;
+            timerLabel.setText("Time: " + seconds);
+            timer = new Timer(1000, new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    seconds++;
+                    timerLabel.setText("Time: " + seconds);
+                }
+            });
+            timer.start();
+        } else { // FREE MODE
+            timerLabel.setText("Free Mode");
+            timer = null;
+        }
+
+        ///card game board
         board = new ArrayList<JButton>();
         boardPanel.setLayout(new GridLayout(rows, columns));
         for (int i = 0; i < cardSet.size(); i++) {
@@ -109,8 +167,14 @@ public class MatchCards {
                                 hideCardTimer.start();
                             }
                             else {
+                                // caard matched
+                                // Disable the matched cards
+                                // card1Selected.setEnabled(false);
+                                // card2Selected.setEnabled(false);
                                 card1Selected = null;
                                 card2Selected = null;
+                                
+                                checkWinCondition(timerLabel);
                             }
                         }
                     }
@@ -121,7 +185,7 @@ public class MatchCards {
         }
         frame.add(boardPanel);
 
-        //restart game button
+        ///restart game button
         restartButton.setFont(new Font("Arial", Font.PLAIN, 16));
         restartButton.setText("Restart Game");
         restartButton.setPreferredSize(new Dimension(boardWidth, 30));
@@ -130,24 +194,33 @@ public class MatchCards {
         restartButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (!gameReady) {
-                    return;
-                }
-
                 gameReady = false;
                 restartButton.setEnabled(false);
                 card1Selected = null;
                 card2Selected = null;
                 shuffleCards();
 
-                //re assign buttons with new cards
                 for (int i = 0; i < board.size(); i++) {
                     board.get(i).setIcon(cardSet.get(i).cardImageIcon);
+                    board.get(i).setEnabled(true); // 
                 }
 
                 errorCount = 0;
                 textLabel.setText("Errors: " + Integer.toString(errorCount));
                 hideCardTimer.start();
+
+                if (timer != null) timer.stop();
+                if (selectedMode == GameMode.COUNT_DOWN) {
+                    seconds = countdownSeconds;
+                    timerLabel.setText("Time: " + seconds);
+                    timer.start();
+                } else if (selectedMode == GameMode.COUNT_UP) {
+                    seconds = 0;
+                    timerLabel.setText("Time: " + seconds);
+                    timer.start();
+                } else {
+                    timerLabel.setText("Free Mode");
+                }
             }
         });
         restartGamePanel.add(restartButton);
@@ -155,7 +228,7 @@ public class MatchCards {
 
         frame.pack();
         frame.setVisible(true);
-
+        
         //start game
         hideCardTimer = new Timer(1500, new ActionListener() {
             @Override
@@ -166,6 +239,29 @@ public class MatchCards {
         hideCardTimer.setRepeats(false);
         hideCardTimer.start();
 
+    }
+    
+    void showGameModeDialog() {
+        String[] options = {"StopWatch", "Time Attack", "Free Mode"};
+        int choice = JOptionPane.showOptionDialog(
+            frame,
+            "Choose Game Mode:",
+            "Game Mode",
+            JOptionPane.DEFAULT_OPTION,
+            JOptionPane.QUESTION_MESSAGE,
+            null,
+            options,
+            options[0]
+        );
+        if (choice == JOptionPane.CLOSED_OPTION) {
+            System.exit(0); // close the game if dialog is closed
+        } else if (choice == 1) {
+            selectedMode = GameMode.COUNT_DOWN;
+        } else if (choice == 2) {
+            selectedMode = GameMode.FREE;
+        } else {
+            selectedMode = GameMode.COUNT_UP;
+        }
     }
 
     void setupCards() {
@@ -187,7 +283,6 @@ public class MatchCards {
     }
 
     void shuffleCards() {
-        System.out.println(cardSet);
         //shuffle
         for (int i = 0; i < cardSet.size(); i++) {
             int j = (int) (Math.random() * cardSet.size()); //get random index
@@ -213,5 +308,38 @@ public class MatchCards {
             gameReady = true;
             restartButton.setEnabled(true);
         }
+    }
+
+    void checkWinCondition(JLabel timerLabel) {
+        boolean allMatched = true;
+        for (int i = 0; i < board.size(); i++) {
+            if (board.get(i).getIcon() == cardBackImageIcon) {
+                allMatched = false;
+                break;
+            }
+        }
+        if (allMatched) {
+            gameReady = false;
+            restartButton.setEnabled(true);
+            if (timer != null) timer.stop();
+            if (selectedMode == GameMode.COUNT_UP) {
+                JOptionPane.showMessageDialog(frame, "Congrats! You win!\nFinis Time: " + seconds + " Seconds", "Winning!!", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(frame, "Congrats! You win!", "Winning!!", JOptionPane.INFORMATION_MESSAGE);
+            }
+            // Reset frame and back to play()
+            restoplay();
+        }
+    }
+
+    void restoplay(){
+        // frame.getContentPane().removeAll();
+        // frame.repaint();
+        frame.dispose(); // close the current frame
+        errorCount = 0;
+        textLabel.setText("Errors: " + Integer.toString(errorCount));
+        // Create a new JFrame and set it up
+        frame = new JFrame("Pokemon Match Cards");
+        play();
     }
 }
