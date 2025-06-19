@@ -18,7 +18,7 @@ public class MatchCards {
         }
     }
 
-    String[] cardList = { //track cardNames
+    String[] pokeList = { //track cardNames
         "darkness",
         "double",
         "fairy",
@@ -30,6 +30,21 @@ public class MatchCards {
         "psychic",
         "water"
     };
+    // If you need the second set, declare it separately:
+    String[] characterCardList = {
+        "char_brook_b",
+        "char_chopper_b",
+        "char_franky_b",
+        "char_luffy_b",
+        "char_nami_b",
+        "char_robin_b",
+        "char_sanji_b",
+        "char_zoro_b",
+        "char_usopp_b",
+        "char_jinbe_b"
+    };
+
+    String[] cardList = pokeList.clone(); // default
 
     int rows = 4;
     int columns = 5;
@@ -71,7 +86,8 @@ public class MatchCards {
         boardPanel = new JPanel();
         restartGamePanel = new JPanel();
 
-        showGameModeDialog();
+        // showHomeFrame();
+        // showGameModeDialog();
         setupCards();
         shuffleCards();
 
@@ -102,9 +118,7 @@ public class MatchCards {
         if (selectedMode == GameMode.COUNT_DOWN) {
             seconds = countdownSeconds;
             timerLabel.setText("Time: " + seconds);
-            timer = new Timer(1000, new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
+            timer = new Timer(1000, e -> {
                     seconds--;
                     timerLabel.setText("Time: " + seconds);
                     if (seconds <= 0) {
@@ -113,22 +127,18 @@ public class MatchCards {
                         gameReady = false;
                         restartButton.setEnabled(true);
                         // Reset frame & back to play()
-                        restoplay();
+                        restohome();
                     }
-                }
-            });
-            timer.start();
+                });
+            // timer.start();
         } else if (selectedMode == GameMode.COUNT_UP) {
             seconds = 0;
             timerLabel.setText("Time: " + seconds);
-            timer = new Timer(1000, new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
+            timer = new Timer(1000, e -> {
                     seconds++;
                     timerLabel.setText("Time: " + seconds);
-                }
-            });
-            timer.start();
+                });
+            // timer.start();
         } else { // FREE MODE
             timerLabel.setText("Free Mode");
             timer = null;
@@ -188,12 +198,10 @@ public class MatchCards {
         ///restart game button
         restartButton.setFont(new Font("Arial", Font.PLAIN, 16));
         restartButton.setText("Restart Game");
-        restartButton.setPreferredSize(new Dimension(boardWidth, 30));
+        restartButton.setPreferredSize(new Dimension(boardWidth-80 , 30));
         restartButton.setFocusable(false);
         restartButton.setEnabled(false);
-        restartButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
+        restartButton.addActionListener(e -> {
                 gameReady = false;
                 restartButton.setEnabled(false);
                 card1Selected = null;
@@ -213,56 +221,42 @@ public class MatchCards {
                 if (selectedMode == GameMode.COUNT_DOWN) {
                     seconds = countdownSeconds;
                     timerLabel.setText("Time: " + seconds);
-                    timer.start();
+                    // timer.start();
                 } else if (selectedMode == GameMode.COUNT_UP) {
                     seconds = 0;
                     timerLabel.setText("Time: " + seconds);
-                    timer.start();
+                    // timer.start();
                 } else {
                     timerLabel.setText("Free Mode");
                 }
-            }
-        });
+            });
+        // Panel tombol restart dan home
+        restartGamePanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         restartGamePanel.add(restartButton);
+
+        // Tambahkan home button kecil
+        JButton homeButton = new JButton("Home");
+        homeButton.setFont(new Font("Arial", Font.PLAIN, 12));
+        homeButton.setPreferredSize(new Dimension(80, 28));
+        restartGamePanel.add(homeButton);
+
         frame.add(restartGamePanel, BorderLayout.SOUTH);
+        // Action home button
+        homeButton.addActionListener(e -> {
+            restohome();
+        });
 
         frame.pack();
         frame.setVisible(true);
         
         //start game
-        hideCardTimer = new Timer(1500, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                hideCards();
-            }
-        });
+        hideCardTimer = new Timer(1500, e -> hideCards());
+
         hideCardTimer.setRepeats(false);
         hideCardTimer.start();
 
     }
-    
-    void showGameModeDialog() {
-        String[] options = {"StopWatch", "Time Attack", "Free Mode"};
-        int choice = JOptionPane.showOptionDialog(
-            frame,
-            "Choose Game Mode:",
-            "Game Mode",
-            JOptionPane.DEFAULT_OPTION,
-            JOptionPane.QUESTION_MESSAGE,
-            null,
-            options,
-            options[0]
-        );
-        if (choice == JOptionPane.CLOSED_OPTION) {
-            System.exit(0); // close the game if dialog is closed
-        } else if (choice == 1) {
-            selectedMode = GameMode.COUNT_DOWN;
-        } else if (choice == 2) {
-            selectedMode = GameMode.FREE;
-        } else {
-            selectedMode = GameMode.COUNT_UP;
-        }
-    }
+
 
     void setupCards() {
         cardSet = new ArrayList<Card>();
@@ -305,6 +299,9 @@ public class MatchCards {
             for (int i = 0; i < board.size(); i++) {
                 board.get(i).setIcon(cardBackImageIcon);
             }
+            if ((selectedMode == GameMode.COUNT_DOWN || selectedMode == GameMode.COUNT_UP) && timer != null) {
+                timer.start();
+            }
             gameReady = true;
             restartButton.setEnabled(true);
         }
@@ -328,18 +325,90 @@ public class MatchCards {
                 JOptionPane.showMessageDialog(frame, "Congrats! You win!", "Winning!!", JOptionPane.INFORMATION_MESSAGE);
             }
             // Reset frame and back to play()
-            restoplay();
+            restohome();
         }
     }
 
-    void restoplay(){
+    void restohome(){
         // frame.getContentPane().removeAll();
         // frame.repaint();
         frame.dispose(); // close the current frame
         errorCount = 0;
         textLabel.setText("Errors: " + Integer.toString(errorCount));
+        if (timer != null) timer.stop();
+
         // Create a new JFrame and set it up
         frame = new JFrame("Pokemon Match Cards");
-        play();
+        showHomeFrame();
+    }
+
+    void showHomeFrame() {
+        JFrame homeFrame = new JFrame("Pokemon Memory Cards - Home");
+        homeFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        homeFrame.setSize(400, 300);
+        homeFrame.setLocationRelativeTo(null);
+        homeFrame.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        // Pilih Mode
+        JLabel modeLabel = new JLabel("Pilih Mode:");
+        String[] modeOptions = {"StopWatch", "Time Attack", "Free Mode"};
+        JComboBox<String> modeCombo = new JComboBox<>(modeOptions);
+
+        // Pilih Tema
+        JLabel themeLabel = new JLabel("Pilih Tema:");
+        String[] themeOptions = {"Default", "Pokemon", "One Piece"};
+        JComboBox<String> themeCombo = new JComboBox<>(themeOptions);
+
+        // Tombol Play
+        JButton playButton = new JButton("Play");
+
+        // Layout
+        gbc.gridx = 0; gbc.gridy = 0;
+        homeFrame.add(modeLabel, gbc);
+        gbc.gridx = 1;
+        homeFrame.add(modeCombo, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 1;
+        homeFrame.add(themeLabel, gbc);
+        gbc.gridx = 1;
+        homeFrame.add(themeCombo, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 2; gbc.gridwidth = 2;
+        homeFrame.add(playButton, gbc);
+
+        // Action Play
+        playButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Set mode sesuai pilihan
+                int modeIdx = modeCombo.getSelectedIndex();
+                if (modeIdx == 1) {
+                    selectedMode = GameMode.COUNT_DOWN;
+                } else if (modeIdx == 2) {
+                    selectedMode = GameMode.FREE;
+                } else {
+                    selectedMode = GameMode.COUNT_UP;
+                }
+                // Set tema sesuai pilihan (implementasi tema sesuai kebutuhan)
+                String selectedTheme = (String) themeCombo.getSelectedItem();
+                if (selectedTheme.equals("Pokemon")) {
+                    cardList = pokeList.clone(); // Use Pokemon cards
+                } else if (selectedTheme.equals("One Piece")) {
+                    cardList = characterCardList.clone(); // Use One Piece cards
+                } else {
+                    cardList = characterCardList.clone(); // Default to character cards
+                }
+                
+                homeFrame.dispose(); // Tutup frame home
+                play(); // Mulai game
+            }
+        });
+
+        homeFrame.setVisible(true);
     }
 }
+
+// TODO: perbanyak mode dan tema, tambahkan home button di game/play()
