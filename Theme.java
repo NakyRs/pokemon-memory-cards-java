@@ -1,4 +1,4 @@
-public class tema {
+public class Theme{
     public static String[] pokeList = { //track cardNames
         "darkness",
         "double",
@@ -26,29 +26,17 @@ public class tema {
     };
 
     public static String[] tarotCardList = {
-        "fool",
-        "magician",
-        "priestess",
-        "empress",
-        "emperor",
-        "hierophant1",
-        "wheel-of-fortune",
-        "chariot",
-        "strength",
-        "hermit"
-    };
-    public static String[] tarotCardList2 = {
     "fool",
     "magician",
     "priestess",
     "empress",
     "emperor",
     "hierophant1",
-    "lovers",
     "chariot",
     "strength",
     "hermit",
     "wheel-of-fortune",
+    "lovers",
     "justice",
     "hanged-man",
     "death",

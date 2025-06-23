@@ -1,6 +1,7 @@
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import javax.swing.*;
 
 public class MatchCards {
@@ -18,8 +19,7 @@ public class MatchCards {
         }
     }
 
-    String[] cardList = tema.pokeList.clone(); // default
-
+    
     int rows = 4;
     int columns = 5;
     int cardWidth = 90;
@@ -30,7 +30,7 @@ public class MatchCards {
 
     int boardWidth = columns * cardWidth; //5*90 = 450px
     int boardHeight = rows * cardHeight; //4*128 = 512px
-
+    
     JFrame frame = new JFrame("Match Cards");
     JLabel textLabel = new JLabel();
     JPanel textPanel = new JPanel();
@@ -51,9 +51,11 @@ public class MatchCards {
         COUNT_UP, COUNT_DOWN, FREE
     }
 
-    String selectedTheme= "Pokemon"; // default theme
+    //default
+    String[] cardList = Theme.pokeList.clone();
+    String selectedTheme= "Pokemon";
     GameMode selectedMode = GameMode.COUNT_UP;
-    int countdownSeconds = 5; // default
+    int countdownSeconds = 180;
 
     
     void play() {
@@ -261,7 +263,7 @@ public class MatchCards {
     void shuffleCards() {
         //shuffle
         for (int i = 0; i < cardSet.size(); i++) {
-            int j = (int) (Math.random() * cardSet.size()); //get random index
+            int j = (int) (Math.random() * cardSet.size());
             //swap
             Card temp = cardSet.get(i);
             cardSet.set(i, cardSet.get(j));
@@ -329,11 +331,12 @@ public class MatchCards {
         homeFrame.setSize(320, 210); 
         homeFrame.setLocationRelativeTo(null); 
         homeFrame.setLayout(null);
-
+        homeFrame.setResizable(false);
+        
         // Mode
         JLabel modeLabel = new JLabel("Pilih Mode:");
         modeLabel.setBounds(20, 20, 100, 25); 
-        String[] modeOptions = {"StopWatch", "Time Attack", "Free Mode"};
+        String[] modeOptions = {"StopWatch", "Time Attack", "Free"};
         JComboBox<String> modeCombo = new JComboBox<>(modeOptions);
         modeCombo.setBounds(130, 20, 150, 25); 
 
@@ -369,15 +372,15 @@ public class MatchCards {
 
                 selectedTheme = (String) themeCombo.getSelectedItem();
                 if (selectedTheme.equals("Pokemon")) {
-                    cardList = tema.pokeList.clone(); // Use Pokemon cards
+                    cardList = Theme.pokeList.clone(); // Use Pokemon cards
                 } else if (selectedTheme.equals("One Piece")) {
-                    cardList = tema.characterCardList.clone(); // Use One Piece cards
+                    cardList = Theme.characterCardList.clone(); // Use One Piece cards
                 } else if (selectedTheme.equals("Tarot")) {
-                    cardList = tema.tarotCardList.clone(); // Use Tarot cards
+                    cardList = Arrays.copyOf(Theme.tarotCardList, 10); // Use 10 Tarot cards
                 } else if (selectedTheme.equals("Tarot2 (Hard)")) {
-                    cardList = tema.tarotCardList2.clone(); // Use Tarot2 cards
+                    cardList = Theme.tarotCardList.clone(); // Use all Tarot cards
                 } else {
-                    cardList = tema.pokeList.clone(); // Default to poke cards
+                    cardList = Theme.pokeList.clone(); // Default to poke cards
                 }
 
                 homeFrame.dispose(); 
@@ -389,4 +392,4 @@ public class MatchCards {
 
 }
 
-// TODO: perbanyak mode dan tema
+// TODO: add limited error count, Hint, and other features
